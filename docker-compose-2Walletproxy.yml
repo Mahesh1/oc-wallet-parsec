@@ -1,0 +1,26 @@
+version: '3'
+services:
+  walletproxy:
+    build: 
+      context: .
+    ports:
+      - "3000:3000"
+    networks:
+      - 2pc-network
+    env_file:
+      - .env.walletproxy
+
+  walletproxy2:
+    build: 
+      context: .
+    ports:
+      - "3001:3001"
+    networks:
+      - 2pc-network
+    env_file:
+      - .env.walletproxy2
+    environment:
+      - PORT=3001
+networks:
+  2pc-network:
+    name: 2pc-network

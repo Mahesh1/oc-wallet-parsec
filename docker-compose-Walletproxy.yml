@@ -1,0 +1,15 @@
+version: '3'
+services:
+  walletproxy:
+    build: 
+      context: .
+    ports:
+      - "3000:3000"
+    networks:
+      - 2pc-network
+    env_file:
+      - .env
+
+networks:
+  2pc-network:
+    name: 2pc-network
