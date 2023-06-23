@@ -170,7 +170,7 @@ router.post("/send", sendHandler);
 router.post("/sendandimport", sendHandler);
 /**
  * @swagger
- * /importfunds:
+ * /sendandimport:
  *   post:
  *     summary: Import unspent funds into a wallet
  *     description: Imports unspent funds into the given wallet ID.
