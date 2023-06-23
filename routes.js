@@ -139,6 +139,37 @@ router.get("/balance/:walletID", balanceHandler);
 router.post("/send", sendHandler);
 /**
  * @swagger
+ * /send:
+ *   post:
+ *     summary: Send funds between accounts and import unspent funds
+ *     description: Sends funds from the sender's wallet to the receiver's address and import unspent funds to receiver's wallet.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               senderID:
+ *                 type: number
+ *               receiverAddress:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Successful operation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ */
+router.post("/sendandimport", sendHandler);
+/**
+ * @swagger
  * /importfunds:
  *   post:
  *     summary: Import unspent funds into a wallet
