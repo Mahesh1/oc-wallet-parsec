@@ -1,7 +1,7 @@
 const swaggerUI = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 
-const options = {
+let options = {
   definition: {
     openapi: "3.0.0",
     info: {
@@ -10,11 +10,7 @@ const options = {
       description:
         "a wrapper proxy around the client-cli wallet for the OpenCBDC",
     },
-    servers: [
-      {
-        url: `http://localhost:${process.env.PORT}`,
-      },
-    ],
+    servers: [],
     components: {
       securitySchemes: {
         ApiKeyAuth: {
@@ -33,8 +29,18 @@ const options = {
   apis: ["routes.js"],
 };
 
-const specs = swaggerJsdoc(options);
-
 module.exports = (app) => {
-  app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs));
+  app.use((req, res, next) => {
+    options.definition.servers = [
+      {
+        url: `${req.protocol}://${req.get("host")}`,
+      },
+    ];
+    next();
+  });
+
+  app.use("/api-docs", swaggerUI.serve, (req, res, next) => {
+    const specs = swaggerJsdoc(options);
+    swaggerUI.setup(specs)(req, res, next);
+  });
 };
