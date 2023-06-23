@@ -10,7 +10,7 @@ docker-compose is required to run this project
 2. rename example.env to .env and update the values
 3. Start the OpenCBDC Network
    ```bash
-   docker-compose --file docker-compose-2pc.yml --file docker-compose-prebuilt-2pc.yml  up --no-build
+   docker compose --file docker-compose-2pc.yml --file docker-compose-prebuilt-2pc.yml  up --no-build
    ```
 4. Start the webproxy
    ```bash
