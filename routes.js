@@ -139,7 +139,7 @@ router.get("/balance/:walletID", balanceHandler);
 router.post("/send", sendHandler);
 /**
  * @swagger
- * /send:
+ * /sendandimport:
  *   post:
  *     summary: Send funds between accounts and import unspent funds
  *     description: Sends funds from the sender's wallet to the receiver's address and import unspent funds to receiver's wallet.
@@ -170,7 +170,7 @@ router.post("/send", sendHandler);
 router.post("/sendandimport", sendHandler);
 /**
  * @swagger
- * /sendandimport:
+ * /importfunds:
  *   post:
  *     summary: Import unspent funds into a wallet
  *     description: Imports unspent funds into the given wallet ID.
