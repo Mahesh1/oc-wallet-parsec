@@ -12,22 +12,21 @@ const clientCliPath = path.join(__dirname, "./bin/client-cli");
 /**
  * function to create a new wallet
  */
-function createWalletHandler(req, res) {
-  const walletID = getNextWalletID();
-  const command = spawn(clientCliPath, [
-    "2pc-compose.cfg",
-    `mempool${walletID}.dat`,
-    `wallet${walletID}.dat`,
-    "newaddress",
-  ]);
-  let output = "";
-  command.stdout.on("data", (data) => {
-    output += data.toString();
-  });
-  command.on("close", (code) => {
+async function createWalletHandler(req, res) {
+  try {
+    const walletID = getNextWalletID();
+    const output = await runCommands([
+      "2pc-compose.cfg",
+      `mempool${walletID}.dat`,
+      `wallet${walletID}.dat`,
+      "newaddress",
+    ]);
     const newWallet = writeWalletInfo(walletID, extractAddress(output));
     res.send(newWallet);
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("An error occurred");
+  }
 }
 
 /**
@@ -46,66 +45,99 @@ function getWalletHandler(req, res) {
 /**
  * function to mint new funds
  */
-function mintHandler(req, res) {
+async function mintHandler(req, res) {
   const { walletID, UTXO, atomicUnit } = req.body;
-  const command = spawn(clientCliPath, [
-    "2pc-compose.cfg",
-    `mempool${walletID}.dat`,
-    `wallet${walletID}.dat`,
-    "mint",
-    UTXO,
-    atomicUnit,
-  ]);
-  let output = "";
-  command.stdout.on("data", (data) => {
-    output += data.toString();
-  });
-  command.on("close", (code) => {
+  try {
+    const output = await runCommands([
+      "2pc-compose.cfg",
+      `mempool${walletID}.dat`,
+      `wallet${walletID}.dat`,
+      "mint",
+      UTXO,
+      atomicUnit,
+    ]);
     res.send(output);
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("An error occurred");
+  }
 }
 
 /**
  * function to get balance
  */
-function balanceHandler(req, res) {
+async function balanceHandler(req, res) {
   const { walletID } = req.params;
-  const command = spawn(clientCliPath, [
-    "2pc-compose.cfg",
-    `mempool${walletID}.dat`,
-    `wallet${walletID}.dat`,
-    "info",
-  ]);
-  let output = "";
-  command.stdout.on("data", (data) => {
-    output += data.toString();
-  });
-  command.on("close", (code) => {
+  const walletInfo = getWalletInfo(walletID);
+
+  // Check if walletInfo is empty
+  if (!walletInfo) {
+    return res.status(404).json({ error: "Wallet not found" });
+  }
+
+  const ID = walletInfo.walletID;
+  try {
+    const output = await runCommands([
+      "2pc-compose.cfg",
+      `mempool${ID}.dat`,
+      `wallet${ID}.dat`,
+      "info",
+    ]);
     const json = accountBalanceToJSON(output);
     res.json(json);
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("An error occurred");
+  }
 }
 
 /**
  * function to send funds
  */
-function sendHandler(req, res) {
+async function sendHandler(req, res) {
   const { senderID, receiverAddress, amount } = req.body;
-  const command = spawn(clientCliPath, [
-    "2pc-compose.cfg",
-    `mempool${senderID}.dat`,
-    `wallet${senderID}.dat`,
-    "send",
-    amount,
-    receiverAddress,
-  ]);
-  let output = "";
-  command.stdout.on("data", (data) => {
-    output += data.toString();
-  });
-  command.on("close", (code) => {
+  try {
+    const output = await runCommands([
+      "2pc-compose.cfg",
+      `mempool${senderID}.dat`,
+      `wallet${senderID}.dat`,
+      "send",
+      amount,
+      receiverAddress,
+    ]);
     res.send(output);
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("An error occurred");
+  }
+}
+
+/**
+ * function to send funds and import the unspent output
+ */
+async function sendAndImportHandler(req, res) {
+  const { senderID, receiverAddress, amount } = req.body;
+  try {
+    const output = await runCommands([
+      "2pc-compose.cfg",
+      `mempool${senderID}.dat`,
+      `wallet${senderID}.dat`,
+      "send",
+      amount,
+      receiverAddress,
+    ]);
+    const importinput = extractImportInput(output);
+    if (!importinput) {
+      return res.status(500).send("Failed to extract importinput");
+    }
+    const walletInfo = getWalletInfo(receiverAddress);
+    const recieverID = walletInfo.walletID;
+    const infoOutput = await importUnspentOutput(recieverID, importinput);
+    res.send(infoOutput);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("An error occurred");
+  }
 }
 
 /**
@@ -113,38 +145,15 @@ function sendHandler(req, res) {
  */
 async function importHandler(req, res) {
   const { walletID, importinput } = req.body;
-
   try {
-    const importOutput = await runCommands([
-      "2pc-compose.cfg",
-      `mempool${walletID}.dat`,
-      `wallet${walletID}.dat`,
-      "importinput",
-      importinput,
-    ]);
-    console.log(importOutput);
-
-    const syncOutput = await runCommands([
-      "2pc-compose.cfg",
-      `mempool${walletID}.dat`,
-      `wallet${walletID}.dat`,
-      "sync",
-    ]);
-    console.log(syncOutput);
-
-    const infoOutput = await runCommands([
-      "2pc-compose.cfg",
-      `mempool${walletID}.dat`,
-      `wallet${walletID}.dat`,
-      "info",
-    ]);
-    console.log(infoOutput);
+    const infoOutput = await importUnspentOutput(walletID, importinput);
     res.send(infoOutput);
   } catch (err) {
     console.error(err);
     res.status(500).send("An error occurred");
   }
 }
+
 /**** HELPERS *******/
 /**
  * function to run multple commands
@@ -170,13 +179,52 @@ function runCommands(commandArgs) {
   });
 }
 
+/*
+ ** Helper function to import unspent output
+ */
+async function importUnspentOutput(walletID, importinput) {
+  try {
+    const importOutput = await runCommands([
+      "2pc-compose.cfg",
+      `mempool${walletID}.dat`,
+      `wallet${walletID}.dat`,
+      "importinput",
+      importinput,
+    ]);
+    console.log(importOutput);
+
+    const syncOutput = await runCommands([
+      "2pc-compose.cfg",
+      `mempool${walletID}.dat`,
+      `wallet${walletID}.dat`,
+      "sync",
+    ]);
+    console.log(syncOutput);
+
+    const infoOutput = await runCommands([
+      "2pc-compose.cfg",
+      `mempool${walletID}.dat`,
+      `wallet${walletID}.dat`,
+      "info",
+    ]);
+    console.log(infoOutput);
+    return infoOutput;
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("An error occurred");
+  }
+}
 /**
  * function to write wallet info
- */
+ * */
 function writeWalletInfo(walletID, address) {
+  // Check if address is empty or null
+  if (!address) {
+    return false;
+  }
+
   const walletInfoPath = path.join(__dirname, WalletStoreFIle);
   let walletInfo;
-
   // Check if walletInfo.json already exists
   if (fs.existsSync(walletInfoPath)) {
     // Read existing data
@@ -192,6 +240,7 @@ function writeWalletInfo(walletID, address) {
     walletID,
     address: address,
   };
+
   walletInfo.push(newWallet);
 
   // Write updated walletInfo back to the file
@@ -203,7 +252,7 @@ function writeWalletInfo(walletID, address) {
 /**
  * function to get wallet info
  */
-function getWalletInfo(walletID) {
+function getWalletInfo(identifier) {
   const walletInfoPath = path.join(__dirname, WalletStoreFIle);
 
   // Check if walletInfo.json exists
@@ -211,17 +260,34 @@ function getWalletInfo(walletID) {
     // Read existing data
     const rawdata = fs.readFileSync(walletInfoPath);
     const walletInfo = JSON.parse(rawdata);
+    console.log(walletInfo);
+    // Find and return the wallet with the given walletID or address
+    const foundWallet = walletInfo.find(
+      (wallet) =>
+        wallet.walletID.toString() === identifier ||
+        wallet.address === identifier
+    );
 
-    // Convert walletID to number if it's a string
-    const numWalletID =
-      typeof walletID === "string" ? parseInt(walletID) : walletID;
+    if (!foundWallet) {
+      console.log(`No wallet found for identifier: ${identifier}`);
+    }
+    console.log("foundWallet");
+    console.log(foundWallet);
 
-    // Find and return the wallet with the given walletID
-    return walletInfo.find((wallet) => wallet.walletID === numWalletID);
+    return foundWallet;
   } else {
     // Return null or throw an error if the file doesn't exist
+    console.log(`Wallet info file does not exist at path: ${walletInfoPath}`);
     return null;
   }
+}
+
+/**
+ * Function to extract importinput from string
+ */
+function extractImportInput(str) {
+  const match = str.match(/importinput:\n(\w+)/);
+  return match ? match[1] : null;
 }
 
 //export handlers
@@ -231,5 +297,6 @@ module.exports = {
   mintHandler,
   balanceHandler,
   sendHandler,
+  sendAndImportHandler,
   importHandler,
 };

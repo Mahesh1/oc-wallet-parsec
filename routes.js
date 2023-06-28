@@ -5,6 +5,7 @@ const {
   mintHandler,
   balanceHandler,
   sendHandler,
+  sendAndImportHandler,
   importHandler,
 } = require("./utils/handlers");
 
@@ -167,7 +168,7 @@ router.post("/send", sendHandler);
  *                 result:
  *                   type: string
  */
-router.post("/sendandimport", sendHandler);
+router.post("/sendandimport", sendAndImportHandler);
 /**
  * @swagger
  * /importfunds:
