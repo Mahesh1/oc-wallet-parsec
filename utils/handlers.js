@@ -117,11 +117,13 @@ async function sendHandler(req, res) {
  */
 async function sendAndImportHandler(req, res) {
   const { senderID, receiverAddress, amount } = req.body;
+  const senderWalletInfo = getWalletInfo(senderID);
+  const senderWalletID = senderWalletInfo.walletID;
   try {
     const output = await runCommands([
       "2pc-compose.cfg",
-      `mempool${senderID}.dat`,
-      `wallet${senderID}.dat`,
+      `mempool${senderWalletID}.dat`,
+      `wallet${senderWalletID}.dat`,
       "send",
       amount,
       receiverAddress,
