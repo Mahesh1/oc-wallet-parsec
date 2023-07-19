@@ -9,18 +9,22 @@ const {
 } = require("./utils");
 // Obtain the absolute path of client-cli
 const clientCliPath = path.join(__dirname, "./bin/client-cli");
+const walletsDirectory = path.join(__dirname, "../wallets");
 /**
  * function to create a new wallet
  */
 async function createWalletHandler(req, res) {
   try {
     const walletID = getNextWalletID();
-    const output = await runCommands([
-      "2pc-compose.cfg",
-      `mempool${walletID}.dat`,
-      `wallet${walletID}.dat`,
-      "newaddress",
-    ]);
+    const output = await runCommands(
+      [
+        "2pc-compose.cfg",
+        `mempool${walletID}.dat`,
+        `wallet${walletID}.dat`,
+        "newaddress",
+      ],
+      walletsDirectory
+    );
     const newWallet = writeWalletInfo(walletID, extractAddress(output));
     res.send(newWallet);
   } catch (err) {
