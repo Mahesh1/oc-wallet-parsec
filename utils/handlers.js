@@ -1,6 +1,6 @@
 const path = require("path");
 const fs = require("fs");
-const WalletStoreFIle = "walletInfo.json";
+const WalletStoreFIle = "../wallets/walletInfo.json";
 const { spawn } = require("child_process");
 const {
   accountBalanceToJSON,
