@@ -1,7 +1,7 @@
-version: '3'
+version: "3"
 services:
   walletproxy:
-    build: 
+    build:
       context: .
     ports:
       - "3000:3000"
@@ -9,9 +9,11 @@ services:
       - 2pc-network
     env_file:
       - .env.walletproxy
+    volumes:
+      - ./wallet1:/usr/src/webproxy
 
   walletproxy2:
-    build: 
+    build:
       context: .
     ports:
       - "3001:3001"
@@ -21,6 +23,9 @@ services:
       - .env.walletproxy2
     environment:
       - PORT=3001
+    volumes:
+      - ./wallet2:/usr/src/webproxy
+
 networks:
   2pc-network:
     name: 2pc-network
