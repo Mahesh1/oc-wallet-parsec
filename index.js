@@ -1,10 +1,13 @@
 const express = require("express");
+const cors = require("cors");
 const bodyParser = require("body-parser");
 
 const app = express();
 require("./swagger")(app);
 const routes = require("./routes");
 app.use(bodyParser.json());
+// Enable CORS for all origins
+app.use(cors());
 
 // API Key Middleware
 app.use((req, res, next) => {
