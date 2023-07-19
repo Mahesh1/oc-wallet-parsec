@@ -20,7 +20,7 @@ function accountBalanceToJSON(text) {
 //Get the next wallet ID
 function getNextWalletID() {
   // The path where the wallets are stored
-  const walletDirectoryPath = path.join(__dirname, "../");
+  const walletDirectoryPath = path.join(__dirname, "../wallets");
   console.log(walletDirectoryPath, "walletDirectoryPath");
   // Synchronous version of fs.readdir
   const files = fs.readdirSync(walletDirectoryPath);

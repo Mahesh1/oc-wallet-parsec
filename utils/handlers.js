@@ -16,15 +16,12 @@ const walletsDirectory = path.join(__dirname, "../wallets");
 async function createWalletHandler(req, res) {
   try {
     const walletID = getNextWalletID();
-    const output = await runCommands(
-      [
-        "2pc-compose.cfg",
-        `mempool${walletID}.dat`,
-        `wallet${walletID}.dat`,
-        "newaddress",
-      ],
-      walletsDirectory
-    );
+    const output = await runCommands([
+      "2pc-compose.cfg",
+      `mempool${walletID}.dat`,
+      `wallet${walletID}.dat`,
+      "newaddress",
+    ]);
     const newWallet = writeWalletInfo(walletID, extractAddress(output));
     res.send(newWallet);
   } catch (err) {
@@ -166,7 +163,9 @@ async function importHandler(req, res) {
  */
 function runCommands(commandArgs) {
   return new Promise((resolve, reject) => {
-    const command = spawn(clientCliPath, commandArgs);
+    const command = spawn(clientCliPath, commandArgs, {
+      cwd: walletsDirectory,
+    });
     let output = "";
 
     command.stdout.on("data", (data) => {
