@@ -106,7 +106,9 @@ async function sendHandler(req, res) {
       amount,
       receiverAddress,
     ]);
-    res.send(output);
+    const parsedOutput = parseSendOutput(output);
+
+    res.send(parsedOutput);
   } catch (err) {
     console.error(err);
     res.status(500).send("An error occurred");
@@ -295,6 +297,28 @@ function extractImportInput(str) {
   return match ? match[1] : null;
 }
 
+/**
+ * Function to parse the send ouput
+ */
+function parseSendOutput(output) {
+  const txIdMatch = output.match(/tx_id:\s*(\w+)/);
+  const importInputMatch = output.match(
+    /Data for recipient importinput:\s*(\w+)/
+  );
+  const sentinelResponseMatch = output.match(/Sentinel responded: (.*)/);
+
+  const txId = txIdMatch ? txIdMatch[1] : null;
+  const importInput = importInputMatch ? importInputMatch[1] : null;
+  const sentinelResponse = sentinelResponseMatch
+    ? sentinelResponseMatch[1]
+    : null;
+
+  return {
+    tx_id: txId,
+    importinput: importInput,
+    sentinel_responded: sentinelResponse,
+  };
+}
 //export handlers
 module.exports = {
   createWalletHandler,
