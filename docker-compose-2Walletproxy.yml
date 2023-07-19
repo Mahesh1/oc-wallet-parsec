@@ -10,7 +10,7 @@ services:
     env_file:
       - .env.walletproxy
     volumes:
-      - ./wallet1:/usr/src/webproxy
+      - ./wallet1:/usr/src/webproxy/wallets
 
   walletproxy2:
     build:
@@ -24,7 +24,7 @@ services:
     environment:
       - PORT=3001
     volumes:
-      - ./wallet2:/usr/src/webproxy
+      - ./wallet2:/usr/src/webproxy/wallets
 
 networks:
   2pc-network:
