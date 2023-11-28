@@ -6,7 +6,6 @@ const {
   balanceHandler,
   sendHandler,
   sendAndImportHandler,
-  importHandler,
 } = require("./utils/handlers");
 
 const router = express.Router();
@@ -66,11 +65,11 @@ router.get("/wallet/:walletID", getWalletHandler);
  *             type: object
  *             properties:
  *               walletID:
- *                 type: number
+ *                 type: string
  *               UTXO:
  *                 type: number
  *               atomicUnit:
- *                 type: number
+ *                 type: string
  *     responses:
  *       200:
  *         description: Successful operation
@@ -169,38 +168,4 @@ router.post("/send", sendHandler);
  *                   type: string
  */
 router.post("/sendandimport", sendAndImportHandler);
-/**
- * @swagger
- * /importfunds:
- *   post:
- *     summary: Import unspent funds into a wallet
- *     description: Imports unspent funds into the given wallet ID.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               walletID:
- *                 type: string
- *               importinput:
- *                 type: string
- *             example:
- *               walletID: "0"
- *               importinput: ""
- *     responses:
- *       200:
- *         description: Successful operation
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 result:
- *                   type: string
- */
-
-router.post("/importfunds", importHandler);
-
 module.exports = router;
